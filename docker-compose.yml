@@ -1,0 +1,127 @@
+version: "3.9"
+services:
+   #============================================ Serviços das aplicações ============================================
+  app1:
+    image: app1
+    container_name: app1
+    networks:
+      - app1-network
+    expose:
+      - "5000"
+    environment:
+      - VIRTUAL_HOST=app1.local
+
+  app2:
+    image: app2
+    container_name: app2
+    networks:
+      - app2-network
+    expose:
+      - "5001"
+    environment:
+      - VIRTUAL_HOST=app2.local
+
+  app3:
+    image: app3
+    container_name: app3
+    networks:
+      - app3-network
+    expose:
+      - "5002"
+    environment:
+      - VIRTUAL_HOST=app3.local
+  #============================================ Proxy reverso ============================================
+  nginx:
+    image: nginx:latest
+    container_name: proxy
+    volumes:
+      - ./proxy/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80"
+    networks:
+      - proxy-network
+  #============================================ Database (MySQL) ============================================
+  db1:
+    image: mysql:5.7
+    container_name: db1
+    env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB1_PASSWORD}
+      MYSQL_DATABASE: ${DB1_NAME}
+    networks:
+      - app1-network
+
+  db2:
+    image: mysql:5.7
+    container_name: db2
+    env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB2_PASSWORD}
+      MYSQL_DATABASE: ${DB2_NAME}
+    networks:
+      - app2-network
+
+  db3:
+    image: mysql:5.7
+    container_name: db3
+    env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB3_PASSWORD}
+      MYSQL_DATABASE: ${DB3_NAME}
+    networks:
+      - app3-network
+  #============================================ phpMyAdmin para gerenciar bancos ============================================
+  phpmyadmin1:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin1
+    env_file: .env
+    environment:
+      PMA_HOST: ${DB1_HOST}
+      PMA_USER: ${DB1_USER}
+      PMA_PASSWORD: ${DB1_PASSWORD}
+    ports:
+      - "8081:80"
+    networks:
+      - app1-network
+
+  phpmyadmin2:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin2
+    env_file: .env
+    environment:
+      PMA_HOST: ${DB2_HOST}
+      PMA_USER: ${DB2_USER}
+      PMA_PASSWORD: ${DB2_PASSWORD}
+    ports:
+      - "8082:80"
+    networks:
+      - app2-network
+
+  phpmyadmin3:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin3
+    env_file: .env
+    environment:
+      PMA_HOST: ${DB3_HOST}
+      PMA_USER: ${DB3_USER}
+      PMA_PASSWORD: ${DB3_PASSWORD}
+    ports:
+      - "8083:80"
+    networks:
+      - app3-network
+
+networks:
+  app1-network:
+    driver: bridge
+  app2-network:
+    driver: bridge
+  app3-network:
+    driver: bridge
+  proxy-network:
+    driver: bridge
+  db1-backup:
+    driver: bridge
+  db2-backup:
+    driver: bridge
+  db3-backup:
+    driver: bridge
